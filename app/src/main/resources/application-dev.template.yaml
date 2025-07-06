@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: alif
+  datasource:
+    url: jdbc:postgresql://localhost:5432/alif
+    username: user
+    password: password
+  rabbitmq:
+    host: localhost
+    username: user
+    password: password
+  docker:
+    compose:
+      file:
+        - "../deploy/compose/dev.compose.yaml"

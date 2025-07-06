@@ -1,0 +1,35 @@
+name: "full-alif"
+services:
+  web:
+    build: ../web
+    environment:
+      - "APP_URL=http://app:8080"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - app
+  app:
+    build: ../app
+    volumes:
+      - "./application.yaml:/application/application.yaml"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - rabbitmq
+  rabbitmq:
+    image: "rabbitmq:management"
+    environment:
+      - "RABBITMQ_DEFAULT_USER=user"
+      - "RABBITMQ_DEFAULT_PASS=password"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+  postgres:
+    image: "postgres:latest"
+    environment:
+      - "POSTGRES_DB=alif"
+      - "POSTGRES_USER=user"
+      - "POSTGRES_PASSWORD=password"
+    ports:
+      - "5432:5432"

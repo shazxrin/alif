@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/one-percent-better
+    username: user
+    password: password
+  rabbitmq:
+    host: rabbitmq
+    username: user
+    password: password
+  ai:
+    openai:
+      api-key: "api-key"
+github:
+  username: "username"
+  token: "token"
+app:
+  check-in:
+    schedule-cron: "0 0 */1 * * *"
+    bootstrap:
+      enabled: true
+      projects:
+        - "shazxrin/one-percent-better"
+  reminder:
+    schedule-cron: "0 0 */1 * * *"
