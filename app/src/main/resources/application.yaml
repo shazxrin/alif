@@ -12,6 +12,8 @@ spring:
     host: localhost
     username: user
     password: password
+  liquibase:
+    change-log: /db/changelog-master.yaml
 server:
   error:
     whitelabel:
