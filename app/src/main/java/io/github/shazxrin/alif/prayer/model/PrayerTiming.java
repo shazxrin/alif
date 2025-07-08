@@ -2,18 +2,12 @@ package io.github.shazxrin.alif.prayer.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-@EntityListeners(AuditingEntityListener.class)
 @Table(name = "prayer_timings")
 @Entity
 public class PrayerTiming {
@@ -24,29 +18,23 @@ public class PrayerTiming {
     @Column(nullable = false)
     private LocalDate date;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 5)
     private String subuh;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 5)
     private String syuruk;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 5)
     private String zohor;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 5)
     private String asar;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 5)
     private String maghrib;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 5)
     private String isyak;
-
-    @CreatedDate
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
 
     public PrayerTiming() { }
 
@@ -59,13 +47,7 @@ public class PrayerTiming {
         String maghrib,
         String isyak
     ) {
-        this.date = date;
-        this.subuh = subuh;
-        this.syuruk = syuruk;
-        this.zohor = zohor;
-        this.asar = asar;
-        this.maghrib = maghrib;
-        this.isyak = isyak;
+        this(null, date, subuh, syuruk, zohor, asar, maghrib, isyak);
     }
 
     public PrayerTiming(
@@ -76,9 +58,7 @@ public class PrayerTiming {
         String zohor,
         String asar,
         String maghrib,
-        String isyak,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        String isyak
     ) {
         this.id = id;
         this.date = date;
@@ -88,8 +68,6 @@ public class PrayerTiming {
         this.asar = asar;
         this.maghrib = maghrib;
         this.isyak = isyak;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     public Long getId() {
@@ -154,21 +132,5 @@ public class PrayerTiming {
 
     public void setIsyak(String isyak) {
         this.isyak = isyak;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }

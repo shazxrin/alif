@@ -32,6 +32,9 @@ def process_prayer_timings(file: str) -> DataFrame:
         column_names = ["date", "subuh", "syuruk", "zohor", "asar", "maghrib", "isyak"]
         df.columns = column_names
 
+        df["date"] = pd.to_datetime(df["date"], format="%d/%m/%Y")
+        df["date"] = df["date"].dt.strftime("%Y-%m-%d")
+
         df["subuh"] = df["subuh"].apply(process_am_time)
         df["syuruk"] = df["syuruk"].apply(process_am_time)
 
@@ -66,7 +69,7 @@ def convert_to_sql(df: DataFrame) -> str:
         sql = f"\t({values_str})"
         insert_statements.append(sql)
 
-    return f"INSERT INTO timings ({columns})\nVALUES\n{",\n".join(insert_statements)};"
+    return f"INSERT INTO prayer_timings ({columns})\nVALUES\n{",\n".join(insert_statements)};"
 
 if __name__ == "__main__":
     df = process_prayer_timings("prayer-timetable-2025.csv")
