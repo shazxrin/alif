@@ -9,7 +9,4 @@ spring:
     host: localhost
     username: user
     password: password
-  docker:
-    compose:
-      file:
-        - "../deploy/dev.compose.yaml"
+

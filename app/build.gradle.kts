@@ -54,6 +54,9 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     developmentOnly("org.springframework.boot:spring-boot-docker-compose")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+
+    testImplementation("org.testcontainers:junit-jupiter:1.21.3")
+    testImplementation("org.testcontainers:testcontainers:1.21.3")
 }
 
 tasks.withType<Test> {
