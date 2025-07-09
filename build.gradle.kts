@@ -1,6 +1,4 @@
-plugins {
-    id("java")
+allprojects {
+    group = "io.github.shazxrin"
+    version = "0.0.0"
 }
-
-group = "io.github.shazxrin"
-version = "1.0-SNAPSHOT"
