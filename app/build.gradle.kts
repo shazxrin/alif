@@ -4,8 +4,6 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
 }
 
-group = "io.github.shazxrin"
-
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(24)
