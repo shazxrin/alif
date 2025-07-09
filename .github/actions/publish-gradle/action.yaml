@@ -1,0 +1,52 @@
+name: Publish (Gradle)
+inputs:
+  module-name:
+    description: "Gradle module to publish"
+    required: true
+  gpr-username:
+    description: "GitHub Package Registry username for authentication"
+    required: true
+  gpr-token-maven:
+    description: "GitHub Package Registry token to authenticate with Maven registry"
+    required: true
+  gpr-token-container:
+    description: "GitHub Package Registry token to authenticate with container registry"
+    required: true
+  image-name:
+    description: "Image name to be used"
+    required: true
+  version-name:
+    description: "Version name to be used"
+    required: true
+    default: "latest"
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: "temurin"
+        java-version: 24
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+
+    - name: Run Build
+      shell: bash
+      env:
+        GPR_USERNAME: ${{ inputs.gpr-username }}
+        GPR_TOKEN: ${{ inputs.gpr-token-maven }}
+      run: ./gradlew :${{ inputs.module-name }}:{clean,build} --exclude-task=test
+
+    - name: Authenticate Container Registry
+      shell: bash
+      run: echo "${{ inputs.gpr-token-container }}" | docker login ghcr.io -u ${{ inputs.gpr-username }} --password-stdin
+
+    - name: Build Container Image
+      shell: bash
+      working-directory: ${{ inputs.module-name }}
+      run: docker build . -t ghcr.io/shazxrin/one-percent-better:${{ inputs.version-name }}
+
+    - name: Push Container Image
+      shell: bash
+      run: docker push ghcr.io/shazxrin/one-percent-better:${{ inputs.version-name }}

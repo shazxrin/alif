@@ -1,0 +1,30 @@
+name: Pull Request
+on:
+  pull_request: {}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Build (App)
+        uses: ./.github/actions/build-gradle
+        with:
+          module-name: app
+          gpr-username: ${{ github.actor }}
+          gpr-token-maven: ${{ secrets.GPR_TOKEN }}
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Test (App)
+        uses: ./.github/actions/test-gradle
+        with:
+          module-name: app
+          gpr-username: ${{ github.actor }}
+          gpr-token-maven: ${{ secrets.GPR_TOKEN }}

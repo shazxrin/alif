@@ -1,0 +1,49 @@
+name: Push Tag
+on:
+  push:
+    tags:
+      - "v*.*.*"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Build (App)
+        uses: ./.github/actions/build-gradle
+        with:
+          module-name: app
+          gpr-username: ${{ github.actor }}
+          gpr-token-maven: ${{ secrets.GPR_TOKEN }}
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Test (App)
+        uses: ./.github/actions/test-gradle
+        with:
+          module-name: app
+          gpr-username: ${{ github.actor }}
+          gpr-token-maven: ${{ secrets.GPR_TOKEN }}
+  
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Publish (App)
+        uses: ./.github/actions/publish-gradle
+        with:
+          module-name: app
+          gpr-username: ${{ github.actor }}
+          gpr-token-maven: ${{ secrets.GPR_TOKEN }}
+          gpr-token-container: ${{ secrets.GITHUB_TOKEN }}
+          image-name: "alif"
+          version-name: ${{ github.ref_name }}
