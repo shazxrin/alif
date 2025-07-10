@@ -5,9 +5,13 @@ import io.github.shazxrin.alif.prayer.exception.PrayerTimingNotFoundException;
 import io.github.shazxrin.alif.prayer.model.PrayerPeriod;
 import io.github.shazxrin.alif.prayer.model.PrayerTiming;
 import io.github.shazxrin.alif.prayer.repository.PrayerTimingRepository;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,13 +20,60 @@ public class PrayerTimingService {
 
     private final PrayerTimingRepository prayerTimingRepository;
     private final NotificationService notificationService;
+    private final TaskScheduler taskScheduler;
 
     public PrayerTimingService(
         PrayerTimingRepository prayerTimingRepository,
-        NotificationService notificationService
+        NotificationService notificationService,
+        TaskScheduler taskScheduler
     ) {
         this.prayerTimingRepository = prayerTimingRepository;
         this.notificationService = notificationService;
+        this.taskScheduler = taskScheduler;
+    }
+
+        private LocalTime convertTime(String time) {
+        String[] split = time.split(":");
+        if  (split.length != 2) {
+            throw new IllegalArgumentException("Invalid time format!");
+        }
+
+        int hour = Integer.parseInt(split[0]);
+        if (hour < 0 || hour > 23) {
+            throw new IllegalArgumentException("Invalid hour!");
+        }
+        int minute = Integer.parseInt(split[1]);
+        if (minute < 0 || minute > 59) {
+            throw new IllegalArgumentException("Invalid minute!");
+        }
+
+        return LocalTime.of(hour, minute);
+    }
+
+    private Instant getInstant(LocalDateTime dateTime) {
+        return dateTime
+            .atZone(ZoneId.systemDefault())
+            .toInstant();
+    }
+
+    private void schedulePrayerTimingPeriodReminder(PrayerPeriod period, String time) {
+        LocalTime prayerTime = convertTime(time);
+        LocalDateTime prayerDateTime = LocalDateTime.of(LocalDate.now(), prayerTime);
+        taskScheduler.schedule(
+            () -> remindPrayerTiming(period, prayerDateTime),
+            getInstant(prayerDateTime)
+        );
+    }
+
+    public void schedulePrayerTimingReminders() {
+        PrayerTiming prayerTiming = getPrayerTimingByDate(LocalDate.now());
+
+        schedulePrayerTimingPeriodReminder(PrayerPeriod.SUBUH, prayerTiming.getSubuh());
+        schedulePrayerTimingPeriodReminder(PrayerPeriod.SYURUK, prayerTiming.getSyuruk());
+        schedulePrayerTimingPeriodReminder(PrayerPeriod.ZOHOR, prayerTiming.getZohor());
+        schedulePrayerTimingPeriodReminder(PrayerPeriod.ASAR, prayerTiming.getAsar());
+        schedulePrayerTimingPeriodReminder(PrayerPeriod.MAGHRIB, prayerTiming.getMaghrib());
+        schedulePrayerTimingPeriodReminder(PrayerPeriod.ISYAK, prayerTiming.getIsyak());
     }
 
     public PrayerTiming getPrayerTimingByDate(LocalDate date) {
