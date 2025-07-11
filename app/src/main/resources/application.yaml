@@ -22,4 +22,5 @@ app:
   prayer:
     summary:
       schedule-cron: "0 0 5 * * *"
-
+    pre-reminder:
+      duration-before: 15m

@@ -1,10 +1,13 @@
 package io.github.shazxrin.alif.prayer.service;
 
 import io.github.shazxrin.alif.notification.service.NotificationService;
+import io.github.shazxrin.alif.prayer.configuration.PrayerTimingConfiguration;
 import io.github.shazxrin.alif.prayer.exception.PrayerTimingNotFoundException;
 import io.github.shazxrin.alif.prayer.model.PrayerPeriod;
 import io.github.shazxrin.alif.prayer.model.PrayerTiming;
 import io.github.shazxrin.alif.prayer.repository.PrayerTimingRepository;
+
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -19,15 +22,18 @@ public class PrayerTimingService {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd MMM YYYY");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
+    private final PrayerTimingConfiguration prayerTimingConfiguration;
     private final PrayerTimingRepository prayerTimingRepository;
     private final NotificationService notificationService;
     private final TaskScheduler taskScheduler;
 
     public PrayerTimingService(
+        PrayerTimingConfiguration prayerTimingConfiguration,
         PrayerTimingRepository prayerTimingRepository,
         NotificationService notificationService,
         TaskScheduler taskScheduler
     ) {
+        this.prayerTimingConfiguration = prayerTimingConfiguration;
         this.prayerTimingRepository = prayerTimingRepository;
         this.notificationService = notificationService;
         this.taskScheduler = taskScheduler;
@@ -61,29 +67,15 @@ public class PrayerTimingService {
         String title = "Unknown prayer time.";
         String message = "Time to pray for unknown. Always good to pray for no reason.";
         switch (prayerPeriod) {
-            case SUBUH -> {
-                title = "It's Subuh prayer time.";
-                message = String.format("It is %s. It is time to pray Subuh", dateTime.format(TIME_FORMAT));
+            case SUBUH, ZOHOR, ASAR, MAGHRIB, ISYAK -> {
+                String prayerName = prayerPeriod.name().toLowerCase();
+
+                title = String.format("It is %s prayer time.", prayerName);
+                message = String.format("It is time to pray %s at %s.", prayerName, dateTime.format(TIME_FORMAT));
             }
             case SYURUK -> {
-                title = "It's Syuruk.";
-                message = String.format("It is %s. Rise and shine!", dateTime.format(TIME_FORMAT));
-            }
-            case ZOHOR -> {
-                title = "It's Zohor prayer time.";
-                message = String.format("It is %s. It is time to pray Zohor", dateTime.format(TIME_FORMAT));
-            }
-            case ASAR -> {
-                title = "It's Asar prayer time.";
-                message = String.format("It is %s. It is time to pray Asar", dateTime.format(TIME_FORMAT));
-            }
-            case MAGHRIB -> {
-                title = "It's Maghrib prayer time.";
-                message = String.format("It is %s. It is time to pray Maghrib", dateTime.format(TIME_FORMAT));
-            }
-            case ISYAK -> {
-                title = "It's Isyak prayer time.";
-                message = String.format("It is %s. It is time to pray Isyak", dateTime.format(TIME_FORMAT));
+                title = "It is syuruk.";
+                message = String.format("It is syuruk at %s.", dateTime.format(TIME_FORMAT));
             }
         }
 
@@ -108,6 +100,46 @@ public class PrayerTimingService {
         schedulePrayerTimingPeriodReminder(PrayerPeriod.ASAR, prayerTiming.getAsar());
         schedulePrayerTimingPeriodReminder(PrayerPeriod.MAGHRIB, prayerTiming.getMaghrib());
         schedulePrayerTimingPeriodReminder(PrayerPeriod.ISYAK, prayerTiming.getIsyak());
+    }
+
+    private void remindPrePrayerTiming(PrayerPeriod prayerPeriod, LocalDateTime dateTime) {
+        String title = "Unknown pre-prayer time.";
+        String message = "Time to pray for unknown soon. Always good to pray for no reason.";
+        switch (prayerPeriod) {
+            case SUBUH, ZOHOR, ASAR, MAGHRIB, ISYAK -> {
+                String prayerName = prayerPeriod.name().toLowerCase();
+
+                title = String.format("It is almost %s prayer time.", prayerName);
+                message = String.format("It is almost time to pray %s at %s.", prayerName, dateTime.format(TIME_FORMAT));
+            }
+            case SYURUK -> {
+                title = "It is almost syuruk.";
+                message = String.format("It is almost syuruk at %s.", dateTime.format(TIME_FORMAT));
+            }
+        }
+
+        notificationService.sendNotification(title, message);
+    }
+
+    private void schedulePrePrayerTimingPeriodReminder(PrayerPeriod period, String time, Duration durationBefore) {
+        LocalTime prePrayerTime = convertTime(time).minus(durationBefore);
+        LocalDateTime prePrayerDateTime = LocalDateTime.of(LocalDate.now(), prePrayerTime);
+        taskScheduler.schedule(
+            () -> remindPrePrayerTiming(period, prePrayerDateTime),
+            getInstant(prePrayerDateTime)
+        );
+    }
+
+    public void schedulePrePrayerTimingReminders() {
+        PrayerTiming prayerTiming = getPrayerTimingByDate(LocalDate.now());
+        Duration durationBefore = prayerTimingConfiguration.getPreReminder().getDurationBefore();
+
+        schedulePrePrayerTimingPeriodReminder(PrayerPeriod.SUBUH, prayerTiming.getSubuh(), durationBefore);
+        schedulePrePrayerTimingPeriodReminder(PrayerPeriod.SYURUK, prayerTiming.getSyuruk(), durationBefore);
+        schedulePrePrayerTimingPeriodReminder(PrayerPeriod.ZOHOR, prayerTiming.getZohor(), durationBefore);
+        schedulePrePrayerTimingPeriodReminder(PrayerPeriod.ASAR, prayerTiming.getAsar(), durationBefore);
+        schedulePrePrayerTimingPeriodReminder(PrayerPeriod.MAGHRIB, prayerTiming.getMaghrib(), durationBefore);
+        schedulePrePrayerTimingPeriodReminder(PrayerPeriod.ISYAK, prayerTiming.getIsyak(), durationBefore);
     }
 
     public PrayerTiming getPrayerTimingByDate(LocalDate date) {
