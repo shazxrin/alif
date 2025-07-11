@@ -21,4 +21,5 @@ server:
 app:
   prayer:
     summary:
-      scheduled-cron: "0 0 5 * * *"
+      schedule-cron: "0 0 5 * * *"
+
