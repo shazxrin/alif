@@ -6,7 +6,6 @@ import io.github.shazxrin.alif.prayer.exception.PrayerTimingNotFoundException;
 import io.github.shazxrin.alif.prayer.model.PrayerPeriod;
 import io.github.shazxrin.alif.prayer.model.PrayerTiming;
 import io.github.shazxrin.alif.prayer.repository.PrayerTimingRepository;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -41,7 +40,7 @@ public class PrayerTimingService {
 
     private LocalTime convertTime(String time) {
         String[] split = time.split(":");
-        if  (split.length != 2) {
+        if (split.length != 2) {
             throw new IllegalArgumentException("Invalid time format!");
         }
 
@@ -110,7 +109,11 @@ public class PrayerTimingService {
                 String prayerName = prayerPeriod.name().toLowerCase();
 
                 title = String.format("It is almost %s prayer time.", prayerName);
-                message = String.format("It is almost time to pray %s at %s.", prayerName, dateTime.format(TIME_FORMAT));
+                message = String.format(
+                    "It is almost time to pray %s at %s.",
+                    prayerName,
+                    dateTime.format(TIME_FORMAT)
+                );
             }
             case SYURUK -> {
                 title = "It is almost syuruk.";
@@ -155,14 +158,14 @@ public class PrayerTimingService {
 
         String titleTemplate = "Prayer timings for %s";
         String messageTemplate = """
-                Here is a summary of today's prayer timings:
-                Subuh: %s
-                Syuruk: %s
-                Zohor: %s
-                Asar: %s
-                Maghrib: %s
-                Isyak: %s
-                """;
+            Here is a summary of today's prayer timings:
+            Subuh: %s
+            Syuruk: %s
+            Zohor: %s
+            Asar: %s
+            Maghrib: %s
+            Isyak: %s
+            """;
 
         String title = String.format(titleTemplate, LocalDate.now().format(DATE_FORMAT));
         String message = String.format(
