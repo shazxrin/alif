@@ -1,6 +1,4 @@
 spring:
-  application:
-    name: alif
   datasource:
     url: jdbc:postgresql://localhost:5432/alif
     username: user
