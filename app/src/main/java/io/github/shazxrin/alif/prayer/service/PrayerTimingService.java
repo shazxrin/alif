@@ -13,11 +13,14 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PrayerTimingService {
+    private static final Logger log = LoggerFactory.getLogger(PrayerTimingService.class);
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd MMM YYYY");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
@@ -83,11 +86,19 @@ public class PrayerTimingService {
 
     private void schedulePrayerTimingPeriodReminder(PrayerPeriod period, String time) {
         LocalTime prayerTime = convertTime(time);
+
+        if (prayerTime.isBefore(LocalTime.now())) {
+            log.info("Skipping scheduling prayer timing reminder for {} at {}.", period, prayerTime);
+            return;
+        }
+
         LocalDateTime prayerDateTime = LocalDateTime.of(LocalDate.now(), prayerTime);
         taskScheduler.schedule(
             () -> remindPrayerTiming(period, prayerDateTime),
             getInstant(prayerDateTime)
         );
+
+        log.info("Scheduled prayer timing reminder for {} at {}.", period, prayerTime);
     }
 
     public void schedulePrayerTimingReminders() {
@@ -126,11 +137,19 @@ public class PrayerTimingService {
 
     private void schedulePrePrayerTimingPeriodReminder(PrayerPeriod period, String time, Duration durationBefore) {
         LocalTime prePrayerTime = convertTime(time).minus(durationBefore);
+
+        if (prePrayerTime.isBefore(LocalTime.now())) {
+            log.info("Skipping scheduling pre-prayer timing reminder for {} at {}.", period, prePrayerTime);
+            return;
+        }
+
         LocalDateTime prePrayerDateTime = LocalDateTime.of(LocalDate.now(), prePrayerTime);
         taskScheduler.schedule(
             () -> remindPrePrayerTiming(period, prePrayerDateTime),
             getInstant(prePrayerDateTime)
         );
+
+        log.info("Scheduled pre-prayer timing reminder for {} at {}.", period, prePrayerTime);
     }
 
     public void schedulePrePrayerTimingReminders() {
