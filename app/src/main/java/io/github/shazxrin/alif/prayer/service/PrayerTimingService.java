@@ -41,6 +41,14 @@ public class PrayerTimingService {
         this.taskScheduler = taskScheduler;
     }
 
+    public PrayerTiming getPrayerTimingByDate(LocalDate date) {
+        PrayerTiming prayerTiming = prayerTimingRepository.getByDate(date);
+        if (prayerTiming == null) {
+            throw new PrayerTimingNotFoundException("Prayer timing not found!");
+        }
+        return prayerTiming;
+    }
+
     private LocalTime convertTime(String time) {
         String[] split = time.split(":");
         if (split.length != 2) {
@@ -65,7 +73,11 @@ public class PrayerTimingService {
             .toInstant();
     }
 
-    private void remindPrayerTiming(PrayerPeriod prayerPeriod, LocalDateTime dateTime) {
+    /*
+        Notification for prayer timing period.
+     */
+
+    private void notifyPrayerTimingPeriod(PrayerPeriod prayerPeriod, LocalDateTime dateTime) {
         String title = "Unknown prayer time.";
         String message = "Time to pray for unknown. Always good to pray for no reason.";
         switch (prayerPeriod) {
@@ -84,7 +96,7 @@ public class PrayerTimingService {
         notificationService.sendNotification(title, message);
     }
 
-    private void schedulePrayerTimingPeriodReminder(PrayerPeriod period, String time) {
+    private void scheduleNotifyPrayerTimingPeriod(PrayerPeriod period, String time) {
         LocalTime prayerTime = convertTime(time);
 
         if (prayerTime.isBefore(LocalTime.now())) {
@@ -94,25 +106,29 @@ public class PrayerTimingService {
 
         LocalDateTime prayerDateTime = LocalDateTime.of(LocalDate.now(), prayerTime);
         taskScheduler.schedule(
-            () -> remindPrayerTiming(period, prayerDateTime),
+            () -> notifyPrayerTimingPeriod(period, prayerDateTime),
             getInstant(prayerDateTime)
         );
 
         log.info("Scheduled prayer timing reminder for {} at {}.", period, prayerTime);
     }
 
-    public void schedulePrayerTimingReminders() {
+    public void scheduleAllNotifyPrayerTimingPeriods() {
         PrayerTiming prayerTiming = getPrayerTimingByDate(LocalDate.now());
 
-        schedulePrayerTimingPeriodReminder(PrayerPeriod.SUBUH, prayerTiming.getSubuh());
-        schedulePrayerTimingPeriodReminder(PrayerPeriod.SYURUK, prayerTiming.getSyuruk());
-        schedulePrayerTimingPeriodReminder(PrayerPeriod.ZOHOR, prayerTiming.getZohor());
-        schedulePrayerTimingPeriodReminder(PrayerPeriod.ASAR, prayerTiming.getAsar());
-        schedulePrayerTimingPeriodReminder(PrayerPeriod.MAGHRIB, prayerTiming.getMaghrib());
-        schedulePrayerTimingPeriodReminder(PrayerPeriod.ISYAK, prayerTiming.getIsyak());
+        scheduleNotifyPrayerTimingPeriod(PrayerPeriod.SUBUH, prayerTiming.getSubuh());
+        scheduleNotifyPrayerTimingPeriod(PrayerPeriod.SYURUK, prayerTiming.getSyuruk());
+        scheduleNotifyPrayerTimingPeriod(PrayerPeriod.ZOHOR, prayerTiming.getZohor());
+        scheduleNotifyPrayerTimingPeriod(PrayerPeriod.ASAR, prayerTiming.getAsar());
+        scheduleNotifyPrayerTimingPeriod(PrayerPeriod.MAGHRIB, prayerTiming.getMaghrib());
+        scheduleNotifyPrayerTimingPeriod(PrayerPeriod.ISYAK, prayerTiming.getIsyak());
     }
 
-    private void remindPrePrayerTiming(PrayerPeriod prayerPeriod, LocalDateTime dateTime) {
+    /*
+        Notification for pre-prayer timing period.
+     */
+
+    private void notifyPrePrayerTimingPeriod(PrayerPeriod prayerPeriod, LocalDateTime dateTime) {
         String title = "Unknown pre-prayer time.";
         String message = "Time to pray for unknown soon. Always good to pray for no reason.";
         switch (prayerPeriod) {
@@ -135,7 +151,7 @@ public class PrayerTimingService {
         notificationService.sendNotification(title, message);
     }
 
-    private void schedulePrePrayerTimingPeriodReminder(PrayerPeriod period, String time, Duration durationBefore) {
+    private void scheduleNotifyPrePrayerTimingPeriod(PrayerPeriod period, String time, Duration durationBefore) {
         LocalTime prePrayerTime = convertTime(time).minus(durationBefore);
 
         if (prePrayerTime.isBefore(LocalTime.now())) {
@@ -145,34 +161,30 @@ public class PrayerTimingService {
 
         LocalDateTime prePrayerDateTime = LocalDateTime.of(LocalDate.now(), prePrayerTime);
         taskScheduler.schedule(
-            () -> remindPrePrayerTiming(period, prePrayerDateTime),
+            () -> notifyPrePrayerTimingPeriod(period, prePrayerDateTime),
             getInstant(prePrayerDateTime)
         );
 
         log.info("Scheduled pre-prayer timing reminder for {} at {}.", period, prePrayerTime);
     }
 
-    public void schedulePrePrayerTimingReminders() {
+    public void scheduleAllNotifyPrePrayerTimingPeriods() {
         PrayerTiming prayerTiming = getPrayerTimingByDate(LocalDate.now());
         Duration durationBefore = prayerTimingConfiguration.getPreReminder().getDurationBefore();
 
-        schedulePrePrayerTimingPeriodReminder(PrayerPeriod.SUBUH, prayerTiming.getSubuh(), durationBefore);
-        schedulePrePrayerTimingPeriodReminder(PrayerPeriod.SYURUK, prayerTiming.getSyuruk(), durationBefore);
-        schedulePrePrayerTimingPeriodReminder(PrayerPeriod.ZOHOR, prayerTiming.getZohor(), durationBefore);
-        schedulePrePrayerTimingPeriodReminder(PrayerPeriod.ASAR, prayerTiming.getAsar(), durationBefore);
-        schedulePrePrayerTimingPeriodReminder(PrayerPeriod.MAGHRIB, prayerTiming.getMaghrib(), durationBefore);
-        schedulePrePrayerTimingPeriodReminder(PrayerPeriod.ISYAK, prayerTiming.getIsyak(), durationBefore);
+        scheduleNotifyPrePrayerTimingPeriod(PrayerPeriod.SUBUH, prayerTiming.getSubuh(), durationBefore);
+        scheduleNotifyPrePrayerTimingPeriod(PrayerPeriod.SYURUK, prayerTiming.getSyuruk(), durationBefore);
+        scheduleNotifyPrePrayerTimingPeriod(PrayerPeriod.ZOHOR, prayerTiming.getZohor(), durationBefore);
+        scheduleNotifyPrePrayerTimingPeriod(PrayerPeriod.ASAR, prayerTiming.getAsar(), durationBefore);
+        scheduleNotifyPrePrayerTimingPeriod(PrayerPeriod.MAGHRIB, prayerTiming.getMaghrib(), durationBefore);
+        scheduleNotifyPrePrayerTimingPeriod(PrayerPeriod.ISYAK, prayerTiming.getIsyak(), durationBefore);
     }
 
-    public PrayerTiming getPrayerTimingByDate(LocalDate date) {
-        PrayerTiming prayerTiming = prayerTimingRepository.getByDate(date);
-        if (prayerTiming == null) {
-            throw new PrayerTimingNotFoundException("Prayer timing not found!");
-        }
-        return prayerTiming;
-    }
+    /*
+        Notification for all prayer timing periods.
+     */
 
-    public void remindPrayerTimingSummary() {
+    public void notifyAllPrayerTimingPeriods() {
         PrayerTiming prayerTiming = getPrayerTimingByDate(LocalDate.now());
 
         String titleTemplate = "Prayer timings for %s";

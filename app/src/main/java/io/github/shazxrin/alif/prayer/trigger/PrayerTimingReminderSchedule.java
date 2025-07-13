@@ -19,12 +19,12 @@ public class PrayerTimingReminderSchedule {
     @Scheduled(cron = "0 0 0 * * *")
     public void runScheduledSchedulePrayerTimingReminders() {
         log.info("Running scheduling prayer timing reminders on new day schedule.");
-        prayerTimingService.schedulePrayerTimingReminders();
+        prayerTimingService.scheduleAllNotifyPrayerTimingPeriods();
     }
 
     @Scheduled(cron = "${app.prayer.summary.schedule-cron}")
     public void runScheduledPrayerTimingSummaryReminder() {
         log.info("Running summary reminder schedule.");
-        prayerTimingService.remindPrayerTimingSummary();
+        prayerTimingService.notifyAllPrayerTimingPeriods();
     }
 }
