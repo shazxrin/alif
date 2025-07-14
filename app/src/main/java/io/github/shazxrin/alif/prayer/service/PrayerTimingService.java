@@ -15,6 +15,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cglib.core.Local;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
@@ -152,16 +153,18 @@ public class PrayerTimingService {
     }
 
     private void scheduleNotifyPrePrayerTimingPeriod(PrayerPeriod period, String time, Duration durationBefore) {
-        LocalTime prePrayerTime = convertTime(time).minus(durationBefore);
+        LocalTime prayerTime = convertTime(time);
+        LocalTime prePrayerTime = prayerTime.minus(durationBefore);
 
         if (prePrayerTime.isBefore(LocalTime.now())) {
             log.info("Skipping scheduling pre-prayer timing reminder for {} at {}.", period, prePrayerTime);
             return;
         }
 
+        LocalDateTime prayerDateTime = LocalDateTime.of(LocalDate.now(), prayerTime);
         LocalDateTime prePrayerDateTime = LocalDateTime.of(LocalDate.now(), prePrayerTime);
         taskScheduler.schedule(
-            () -> notifyPrePrayerTimingPeriod(period, prePrayerDateTime),
+            () -> notifyPrePrayerTimingPeriod(period, prayerDateTime),
             getInstant(prePrayerDateTime)
         );
 
