@@ -21,7 +21,8 @@ public class PrayerTimingReminderBootstrap {
     @Async
     @EventListener(ApplicationReadyEvent.class)
     public void checkInBootstrap() {
-        log.info("Scheduling prayer timing reminders on application startup.");
+        log.info("Scheduling prayer timing reminders and pre-prayer timing reminders on application startup.");
         prayerTimingService.scheduleAllNotifyPrayerTimingPeriods();
+        prayerTimingService.scheduleAllNotifyPrePrayerTimingPeriods();
     }
 }
