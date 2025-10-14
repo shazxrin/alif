@@ -53,7 +53,7 @@ dependencies {
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
     testImplementation("org.testcontainers:junit-jupiter:1.21.3")
-    testImplementation("org.testcontainers:testcontainers:1.21.3")
+    testImplementation("org.testcontainers:testcontainers:2.0.0")
 }
 
 tasks.withType<Test> {
